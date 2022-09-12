@@ -11,7 +11,7 @@ int c = 0; // number of candidates
 
 int votes_sum = 0;
 int number_of_files_read = 0;
-pthread_mutex_t *mymutexs = NULL; // array of mutexs
+pthread_mutex_t *mymutexs = NULL;
 pthread_mutex_t mutex;
 
 typedef struct file_info {
@@ -20,7 +20,6 @@ typedef struct file_info {
 } file_info;
 
 int decite_file_available() {
-  // printf("verificando arquivo livre\n");
   pthread_mutex_lock(&mutex);
 
   int i = 1;
@@ -61,7 +60,7 @@ file_info readFile(int id) {
   file_info info;
   info.len = len;
   info.votes = votes;
-  printf("arquivo data/%d.in lido\n", id);
+  // printf("arquivo data/%d.in lido\n", id);
   return info;
 };
 
@@ -98,34 +97,43 @@ int main() {
   scanf("%d", &n);
 
   printf("insira o numero de threads: ");
-  scanf(" %d", &t);
+  scanf("%d", &t);
 
   printf("insira o numero de candidatos: ");
-  scanf(" %d", &c);
+  scanf("%d", &c);
 
-  printf("numero de arquivos: %d\n", n);
-  printf("numero de threads: %d\n", t);
-  printf("candidatos: %d\n", c);
+  free(mymutexs);
+  free(global_votes);
+  free(files_available);
 
-  files_available = (int *)malloc(n * sizeof(int));
+  files_available = (int *)realloc(files_available, (n + 1) * sizeof(int));
 
   int i = 1;
+
   for (; i <= n; i++) {
-    printf("arquivo %d disponivel\n", i);
+    // printf("arquivo %d disponivel\n", i);
     files_available[i] = i;
   }
-  printf("arquivos disponiveis\n");
-  mymutexs = (pthread_mutex_t *)malloc((c + 1) * sizeof(pthread_mutex_t));
-  printf("mutexs criados\n");
-  for (i = 0; i < c + 1; i++) {
-    pthread_mutex_init(&mymutexs[i], NULL);
-  }
-  printf("criei o array mutex\n");
+
+  // printf("arquivos disponiveis\n");
 
   global_votes = (int *)malloc((c + 1) * sizeof(int));
   for (i = 0; i < c + 1; i++) {
     global_votes[i] = 0;
   }
+
+  // printf("votos zerados\n");
+
+  mymutexs =
+      (pthread_mutex_t *)realloc(mymutexs, ((c + 1) * sizeof(pthread_mutex_t)));
+
+  // printf("mutexs criados\n");
+
+  for (i = 0; i < c + 1; i++) {
+    pthread_mutex_init(&mymutexs[i], NULL);
+  }
+
+  // printf("criei o array mutex\n");
 
   pthread_t *threads = (pthread_t *)malloc(t * sizeof(pthread_t));
   for (i = 0; i < t; i++) {
@@ -137,13 +145,28 @@ int main() {
   }
 
   printf("votos totais: %d\n", votes_sum);
-
-  for (i = 0; i < c + 1; i++) {
+  printf("Votos nulos: %.2f%%(%d)\n",
+         (float)global_votes[0] / votes_sum * 100.0, global_votes[0]);
+  for (i = 1; i < c + 1; i++) {
     printf("candidato %d com %.2f%%(%d)dos votos\n", i,
            (float)global_votes[i] / votes_sum * 100, global_votes[i]);
   }
   int index = findMaxIndex();
-  // {3: 6, 4: 10, 2: 5, 0: 3, 1: 2, 5: 3}
+
+  // 0 39
+  // 1 37
+  // 2 32
+  // 3 39
+  // 4 38
+  // 5 29
+  // 6 39
+  // 7 30
+  // 8 35
+  // 9 40
+  // 10 49
+  // -------------------------------
+  // 10 49
+  // -------------------------------
 
   printf("candidato vencedor: %d\n", index);
 }

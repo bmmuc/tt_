@@ -21,5 +21,12 @@ def populate(n, r, path, l):
                     nums[num] += 1
                 else:
                     nums[num] = 1
-    print(nums)
-populate(5, 5, 'data2/', 15)
+
+    for key in sorted(nums.keys()):
+        print(key, nums[key])
+    # find the key with the highest value
+    print('-------------------------------')
+    print(max(nums, key=nums.get), nums[max(nums, key=nums.get)])
+    print('-------------------------------')
+
+populate(25, 10, 'data2/', 30)
