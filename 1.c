@@ -9,7 +9,6 @@ int n = 0; // number of files
 int t = 0; // number of threads
 int c = 0; // number of candidates
 
-int votes_sum = 0;
 int number_of_files_read = 0;
 pthread_mutex_t *mymutexs = NULL;
 pthread_mutex_t mutex;
@@ -19,7 +18,7 @@ typedef struct file_info {
   int *votes;
 } file_info;
 
-int decite_file_available() {
+int decide_file_available() {
   pthread_mutex_lock(&mutex);
 
   int i = 1;
@@ -65,17 +64,16 @@ file_info readFile(int id) {
 };
 
 void *count_votes(void *threadid) {
-  int file = decite_file_available();
+  int file = decide_file_available();
   while (file != -1) {
     file_info info = readFile(file);
     int i = 0;
     for (; i < info.len; i++) {
       pthread_mutex_lock(&mymutexs[info.votes[i]]);
       global_votes[info.votes[i]] = global_votes[info.votes[i]] + 1;
-      votes_sum++;
       pthread_mutex_unlock(&mymutexs[info.votes[i]]);
     }
-    file = decite_file_available();
+    file = decide_file_available();
   }
 };
 
@@ -91,7 +89,14 @@ int findMaxIndex() {
   }
   return max_index;
 }
-
+int find_total_votes() {
+  int i = 0;
+  int total = 0;
+  for (; i <= c; i++) {
+    total += global_votes[i];
+  }
+  return total;
+}
 int main() {
   printf("insira o numero de arquivos: ");
   scanf("%d", &n);
@@ -144,29 +149,16 @@ int main() {
     pthread_join(threads[i], NULL);
   }
 
-  printf("votos totais: %d\n", votes_sum);
-  printf("Votos nulos: %.2f%%(%d)\n",
-         (float)global_votes[0] / votes_sum * 100.0, global_votes[0]);
-  for (i = 1; i < c + 1; i++) {
-    printf("candidato %d com %.2f%%(%d)dos votos\n", i,
-           (float)global_votes[i] / votes_sum * 100, global_votes[i]);
-  }
+  int total_votes = find_total_votes();
   int index = findMaxIndex();
 
-  // 0 39
-  // 1 37
-  // 2 32
-  // 3 39
-  // 4 38
-  // 5 29
-  // 6 39
-  // 7 30
-  // 8 35
-  // 9 40
-  // 10 49
-  // -------------------------------
-  // 10 49
-  // -------------------------------
+  printf("votos totais: %d\n", total_votes);
+  printf("Votos nulos: %.2f%%(%d)\n",
+         (float)global_votes[0] / total_votes * 100.0, global_votes[0]);
+  for (i = 1; i < c + 1; i++) {
+    printf("candidato %d com %.2f%%(%d)dos votos\n", i,
+           (float)global_votes[i] / total_votes * 100, global_votes[i]);
+  }
 
   printf("candidato vencedor: %d\n", index);
 }
